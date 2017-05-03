@@ -39,12 +39,12 @@ class GUI(Gtk.Window):
         self.hbox1 = Gtk.HBox()
         self.hbox2 = Gtk.HBox()
         self.ramka = Gtk.Frame()
-        self.ramka.add(self.scrolled_window)
-        self.skala = 1.0
-        self.sciezka = ""
+        self.skala = 1.0    # Skala obrazka od 0.2 do 2.0
+        self.sciezka = ""   # Ścieżka pod którą znajduje się aktualnie wczytany obrazek
 
-        # Pakowanie
+        # Pakowanie widgetów
         self.scrolled_window.add(self.obrazek)
+        self.ramka.add(self.scrolled_window)
         self.vbox1.pack_start(self.tytul, False, True, 0)
         self.vbox1.pack_start(self.ramka, False, True, 0)
         self.hbox1.pack_start(Gtk.Label(), True, False, 0)
@@ -70,22 +70,39 @@ class GUI(Gtk.Window):
         self.show_all()
 
     def ustaw_obraz(self, obraz):
+        """Metoda wczytująca wybrany obraz.
+        
+        Argumenty:
+            obraz (str):    Ścieżka pod którą znajduje się obraz, który ma zostać wczytany.
+        """
         self.skala = 1.0
         self.sciezka = obraz
         self.obrazek.set_from_pixbuf(self.pixs.new_from_file(obraz))
 
     def zoom(self, przycisk, rodzaj):
+        """Metoda zmieniająca rozmiar wyświetlanego obrazu.
+        
+        Argumenty:
+            przycisk (Gtk.Button):  Wciśnięty przycisk, uruchamiający metodę.
+            rodzaj (str):           Rodzaj zmiany rozmiaru obrazu. "+" odpowiada za powiększenie, a "-" odpowiada za pomniejszenie obrazu.
+           
+        Metoda zmienia rozmiar wyświetlanego obrazu o 20% względem oryginalnego rozmiaru. Rozmiar jest ustawiany w zakresie od 40% do 200%
+        względem oryginalnego rozmiaru.
+        """
+        # Powiększenie
         if rodzaj == "+":
             if self.skala + 0.2 >= 2.0:
                 self.skala = 2.0
             else:
                 self.skala += 0.2
+        # Pomniejszenie
         elif rodzaj == "-":
             if self.skala - 0.2 <= 0.4:
                 self.skala = 0.4
             else:
                 self.skala -= 0.2
 
+        # Ustaw w oknie obraz o nowym rozmiarze 
         self.obrazek.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_scale(
             self.sciezka, int(floor(GdkPixbuf.Pixbuf.get_file_info(self.sciezka)[1] * self.skala)), -1, True))
 
