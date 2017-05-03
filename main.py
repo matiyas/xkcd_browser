@@ -5,7 +5,6 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 from gi.repository import GdkPixbuf
-from gi.repository import GLib
 from random import randint
 from bs4 import BeautifulSoup
 from math import floor
@@ -14,6 +13,7 @@ import os
 
 
 class GUI(Gtk.Window):
+    """Klasa reprezentująca graficzny interfejs użytkownika."""
     def __init__(self):
         Gtk.Window.__init__(self, title="XKCD Browser", border_width=20)
         self.tytul = Gtk.Label()
@@ -34,6 +34,8 @@ class GUI(Gtk.Window):
         self.hbox2 = Gtk.HBox()
         self.ramka = Gtk.Frame()
         self.ramka.add(self.scrolled_window)
+        self.skala = 1.0
+        self.sciezka = ""
 
         # Pakowanie
         self.scrolled_window.add(self.obrazek)
@@ -74,12 +76,13 @@ class GUI(Gtk.Window):
                 self.skala += 0.2
         elif rodzaj == "-":
             if self.skala - 0.2 <= 0.4:
-                skala = 0.4
+                self.skala = 0.4
             else:
                 self.skala -= 0.2
 
         self.obrazek.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_scale(
             self.sciezka, int(floor(GdkPixbuf.Pixbuf.get_file_info(self.sciezka)[1] * self.skala)), -1, True))
+
 
 class App:
     def __init__(self):
