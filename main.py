@@ -15,6 +15,12 @@ import os
 class GUI(Gtk.Window):
     """Klasa reprezentująca graficzny interfejs użytkownika."""
     def __init__(self):
+        """Metoda inicjalizująca obiekt klasy GUI.
+        
+        Metoda tworzy okno na którym umieszczany jest tytuł, obrazek, przyciski odpowiadające za: losowanie, przejście do
+        poprzedniego obrazka, przejście do następnego obrazka, oraz przejście do najnowszego obrazka, a także pole tekstowe
+        służące do wpisywania numeru obrazka do którego użytkownik chce przejść.
+        """
         Gtk.Window.__init__(self, title="XKCD Browser", border_width=20)
         self.tytul = Gtk.Label()
         self.label_strona = Gtk.Label("Strona: ")
