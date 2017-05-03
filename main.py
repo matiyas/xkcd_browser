@@ -5,8 +5,10 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 from gi.repository import GdkPixbuf
+from gi.repository import GLib
 from random import randint
 from bs4 import BeautifulSoup
+from math import floor
 import urllib
 import os
 
@@ -22,9 +24,10 @@ class GUI(Gtk.Window):
         self.btn_poprzedni = Gtk.Button("<", tooltip_text="Poprzedni")
         self.btn_losuj = Gtk.Button("Losuj")
         self.btn_przejdz = Gtk.Button("Przejdź")
-        self.btn_przybliz = Gtk.Button("+")
-        self.btn_oddal = Gtk.Button("-")
+        self.btn_powieksz = Gtk.Button("+", tooltip_text="Powiększ")
+        self.btn_pomniejsz = Gtk.Button("-", tooltip_text="Pomniejsz")
         self.entry_nr_komiksu = Gtk.Entry(max_length=4)
+        self.pixs = GdkPixbuf.Pixbuf()
         self.obrazek = Gtk.Image()
         self.vbox1 = Gtk.VBox(spacing=20)
         self.hbox1 = Gtk.HBox()
@@ -41,8 +44,8 @@ class GUI(Gtk.Window):
         self.hbox1.pack_start(self.btn_poprzedni, False, False, 0)
         self.hbox1.pack_start(self.btn_nastepny, False, False, 0)
         self.hbox1.pack_start(self.btn_najnowszy, False, False, 0)
-        self.hbox1.pack_start(self.btn_przybliz, False, False, 0)
-        self.hbox1.pack_start(self.btn_oddal, False, False, 0)
+        self.hbox1.pack_start(self.btn_powieksz, False, False, 0)
+        self.hbox1.pack_start(self.btn_pomniejsz, False, False, 0)
         self.hbox1.pack_start(Gtk.Label(), True, False, 0)
         self.vbox1.pack_start(self.hbox1, False, True, 0)
         self.hbox2.pack_start(Gtk.Label(), True, False, 0)
@@ -53,9 +56,30 @@ class GUI(Gtk.Window):
         self.vbox1.pack_start(self.hbox2, False, True, 0)
         self.add(self.vbox1)
 
+        self.btn_powieksz.connect("clicked", self.zoom, "+")
+        self.btn_pomniejsz.connect("clicked", self.zoom, "-")
         self.connect("delete-event", Gtk.main_quit)
         self.show_all()
 
+    def ustaw_obraz(self, obraz):
+        self.skala = 1.0
+        self.sciezka = obraz
+        self.obrazek.set_from_pixbuf(self.pixs.new_from_file(obraz))
+
+    def zoom(self, przycisk, rodzaj):
+        if rodzaj == "+":
+            if self.skala + 0.2 >= 2.0:
+                self.skala = 2.0
+            else:
+                self.skala += 0.2
+        elif rodzaj == "-":
+            if self.skala - 0.2 <= 0.4:
+                skala = 0.4
+            else:
+                self.skala -= 0.2
+
+        self.obrazek.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file_at_scale(
+            self.sciezka, int(floor(GdkPixbuf.Pixbuf.get_file_info(self.sciezka)[1] * self.skala)), -1, True))
 
 class App:
     def __init__(self):
@@ -100,7 +124,7 @@ class App:
 
             nowy_info = self.komiks_info(adres)
 
-            self.gui.tytul.set_markup("<b>{}</b>".format(nowy_info["nazwa_komiksu"]))
+            self.gui.tytul.set_markup(u"<b>{}</b>".format(nowy_info["nazwa_komiksu"]))
             self.gui.entry_nr_komiksu.set_text(nowy_info["numer"])
 
             if not os.path.exists("cache"):
@@ -108,7 +132,7 @@ class App:
             if not os.path.exists("cache/" + nowy_info["nazwa_img"]):
                 urllib.urlretrieve(nowy_info["url"], "cache/" + nowy_info["nazwa_img"])
 
-            self.gui.obrazek.set_from_pixbuf(GdkPixbuf.Pixbuf.new_from_file("cache/" + nowy_info["nazwa_img"]))
+            self.gui.ustaw_obraz("cache/" + nowy_info["nazwa_img"])
             self.aktywna = adres
 
         except IndexError:
