@@ -70,7 +70,7 @@ class GUI(Gtk.Window):
         self.show_all()
 
     def ustaw_obraz(self, obraz):
-        """Metoda wczytująca wybrany obraz.
+        """Metoda wczytująca wybrany obraz, do wyświetlenia.
         
         Argumenty:
             obraz (str):    Ścieżka pod którą znajduje się obraz, który ma zostać wczytany.
@@ -109,6 +109,7 @@ class GUI(Gtk.Window):
 
 class App:
     def __init__(self):
+        """Metoda tworzy obiekt klasy GUI, oraz łączy przyciski z metodami, za które one odpowiadają."""
         self.gui = GUI()
         self.glowna = "http://xkcd.com/"
         self.aktywna = "http://xkcd.com/"
@@ -122,9 +123,18 @@ class App:
 
     @staticmethod
     def komiks_info(adres):
+        """Metoda zwracająca inforamcję o komiksie.
+        
+        Argumenty:
+            adres (str):    Adres strony komiksu, o którym mają zostać zwrócone informacje.
+
+        Metoda zwraca trójelementową listę, gdzie: pierwszy element to adres pod którym znajduje się plik graficzny przedstawiający komiks,
+        drugi element to nazwa tego pliku, a trzeci to numer komiksu.
+        """
         soup = BeautifulSoup(urllib.urlopen(adres), "html.parser")
         numer = soup.find_all(rel="prev")[0]["href"]
 
+        # Jeśli z danego komiksu nie da się przejść do poprzedniego, to jest on pierwszym komiksem
         if numer == "#":
             numer = "1"
         else:
@@ -133,7 +143,16 @@ class App:
         url = "http:" + soup.find_all(id="comic")[0].img["src"]
         return {"url": url, "nazwa_komiksu": soup.find_all(id="ctitle")[0].text, "nazwa_img": url.split('/')[-1], "numer": numer}
 
-    def wczytaj_komiks(self, wejscie, nav):
+    def wczytaj_komiks(self, wejscie, nav="main"):
+        """Metoda pobiera, a następnie wczytuje plik graficzny przedstawiający komiks, oraz aktualizuje dane.
+        
+        Argumenty:
+                wejscie (Gtk.Widget):   Widget odpowiedzialny za wywołanie tej metody.
+                nav (str):              Ciąg znaków mówiący o tym, który komiks ma zostać wczytany. "entry" oznacza, że ma być wczytany
+                                        komiks o numerze podanym przez użytkownika, "next" - następny komiks w stosunku do bieżącego, 
+                                        "prev" - porzedni komiks w stosunku do bieżącego, "rand" - losowy komiks. W przypadku, kiedy nie
+                                        zostanie podany ciąg znaków lub będzie nie będzie on jednym z wyżej wymienionych, to zostanie
+                                        wczytanykomiks znajdujący się na stronie głównej."""
         adres = self.glowna
 
         try:
@@ -153,8 +172,11 @@ class App:
             self.gui.tytul.set_markup(u"<b>{}</b>".format(nowy_info["nazwa_komiksu"]))
             self.gui.entry_nr_komiksu.set_text(nowy_info["numer"])
 
+            # Jeśli katalog cache nie istnieje, to go utwórz
             if not os.path.exists("cache"):
                 os.mkdir("cache")
+
+            # Jeśli komiks nie znajduje się w katalogu cache to pobierz go ze strony    
             if not os.path.exists("cache/" + nowy_info["nazwa_img"]):
                 urllib.urlretrieve(nowy_info["url"], "cache/" + nowy_info["nazwa_img"])
 
